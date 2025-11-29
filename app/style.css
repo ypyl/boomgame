@@ -1,0 +1,341 @@
+/* Basic Reset & Body Styling */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    color: white;
+}
+
+#game-container {
+    width: 1024px;
+    height: 1024px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid cyan;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+    background-color: #1a1a1a;
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+/* Common styling for game screens */
+.game-screen {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.game-screen.hidden {
+    display: none;
+}
+
+/* Styles for images that act as full backgrounds */
+.full-screen-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+/* Initial screen content */
+#game-title {
+    font-size: 3em;
+    color: cyan;
+    text-shadow: 0 0 10px cyan;
+    margin-bottom: 500px;
+    z-index: 1;
+}
+
+#mission-intro {
+    font-size: 1.2em;
+    width: 80%;
+    line-height: 1.5;
+    margin-bottom: 40px;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+#start-prompt {
+    font-size: 1.5em;
+    color: limegreen;
+    text-shadow: 0 0 8px limegreen;
+    animation: pulse 1.5s infinite alternate;
+    z-index: 1;
+}
+
+/* Keyframe for flashing effect */
+@keyframes pulse {
+    from { opacity: 1; }
+    to { opacity: 0.5; }
+}
+
+/* Timer */
+#timer {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 3em;
+    color: limegreen;
+    font-weight: bold;
+    text-shadow: 0 0 10px limegreen;
+    z-index: 2;
+}
+
+#timer.warning {
+    color: red;
+    text-shadow: 0 0 10px red;
+    animation: pulse 0.5s infinite alternate;
+}
+
+/* Bomb Interface Container */
+#bomb-interface {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+/* Deactivate Code */
+#deactivate-code-container {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: yellow;
+    text-shadow: 0 0 5px yellow;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+/* Rules Container */
+#rules-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.85);
+    border: 2px solid cyan;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+    color: white;
+    z-index: 10;
+    text-align: left;
+}
+
+#rules-container h2 {
+    font-size: 1.8em;
+    color: cyan;
+    text-shadow: 0 0 10px cyan;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#rules-container h3 {
+    font-size: 1.3em;
+    color: limegreen;
+    text-shadow: 0 0 5px limegreen;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+#rules-container p {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+#rules-container ol,
+#rules-container ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+#rules-container li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+#rules-container kbd {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: monospace;
+    color: cyan;
+}
+
+#rules-container .action-prompt {
+    color: yellow;
+    font-size: 1.1em;
+    margin-top: 20px;
+    text-align: center;
+}
+
+#rules-container .enter-prompt {
+    color: limegreen;
+    font-size: 1.3em;
+    text-shadow: 0 0 8px limegreen;
+    animation: pulse 1.5s infinite alternate;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 0;
+}
+
+/* Scrollbar styling for rules container */
+#rules-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#rules-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+#rules-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.5);
+    border-radius: 4px;
+}
+
+#rules-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 255, 0.7);
+}
+
+/* Current Number */
+#current-number-display {
+    font-size: 8em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 20px white;
+    margin: 20px 0;
+}
+
+/* Operator Display */
+#operator-display {
+    font-size: 4em;
+    color: cyan;
+    text-shadow: 0 0 10px cyan;
+    margin-bottom: 10px;
+    height: 1.2em;
+}
+
+/* Next Operator Preview */
+#next-operator-display {
+    font-size: 1.2em;
+    color: #aaa;
+    margin-bottom: 30px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* Input Area & Buttons */
+#input-area {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.number-btn {
+    width: 80px;
+    height: 80px;
+    font-size: 2em;
+    border: 3px solid cyan;
+    background: linear-gradient(135deg, rgba(0, 50, 50, 0.8), rgba(0, 30, 30, 0.9));
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6), 
+                inset 0 0 10px rgba(0, 255, 255, 0.1);
+    font-weight: bold;
+}
+
+.number-btn:hover {
+    background: linear-gradient(135deg, rgba(0, 80, 80, 0.9), rgba(0, 50, 50, 1));
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), 
+                0 0 40px rgba(0, 255, 255, 0.5),
+                inset 0 0 15px rgba(0, 255, 255, 0.2);
+    border-color: #00ffff;
+}
+
+.number-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 
+                inset 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
+/* End Screens */
+.end-message {
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    border-radius: 10px;
+    border: 2px solid white;
+}
+
+.end-message h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+#win-screen .end-message h1 {
+    color: limegreen;
+    text-shadow: 0 0 10px limegreen;
+}
+
+#loss-screen .end-message h1 {
+    color: red;
+    text-shadow: 0 0 10px red;
+}
+
+.end-message button {
+    margin-top: 30px;
+    padding: 15px 30px;
+    font-size: 1.5em;
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.end-message button:hover {
+    background-color: white;
+    color: black;
+}
