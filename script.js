@@ -66,7 +66,7 @@ function startGame() {
     } while (deactivateNumber === currentNumber);
 
     // Initial Operator Setup for the first round
-    currentOperator = getNewOperator();
+    currentOperator = getNewOperator(currentNumber, deactivateNumber);
 
     // Switch Screens
     rulesScreen.classList.add('hidden');
@@ -116,44 +116,78 @@ function startRound() {
     isFirstRound = false;
     
     // Generate new round data
-    const roundData = generateRoundData(currentNumber, currentOperator);
+    const roundData = generateRoundData(currentNumber, currentOperator, deactivateNumber);
     
     // Calculate next operator by checking all possible outcomes
-    nextOperatorPreview = getNextOperatorForPossibleOutcomes(currentNumber, currentOperator, roundData.numbers);
+    nextOperatorPreview = getNextOperatorForPossibleOutcomes(currentNumber, currentOperator, roundData.numbers, deactivateNumber);
     
     renderInputButtons(roundData.numbers);
     updateUI();
 }
 
-function generateRoundData(currNum, currOp) {
+function generateRoundData(currNum, currOp, targetNum) {
     let randomNumbers = [];
     const NUM_COUNT = 5;
+    const MAX_DIFF = 100;
+
+    // Helper to check if a result is within valid range
+    const isValidResult = (res) => Math.abs(res - targetNum) <= MAX_DIFF;
 
     if (currOp === '-') {
-        // Subtraction Constraint: selection <= currentNumber
-        // Generate unique numbers from 1 to currNum
+        // Subtraction Constraint: selection <= currentNumber AND result within range
         let availableNumbers = [];
         for (let i = 1; i <= currNum; i++) {
-            availableNumbers.push(i);
+            if (isValidResult(currNum - i)) {
+                availableNumbers.push(i);
+            }
         }
-        
-        // Shuffle and pick NUM_COUNT unique numbers
         randomNumbers = getUniqueRandomNumbers(availableNumbers, NUM_COUNT);
     } else if (currOp === '/') {
-        // Division Constraint: selection must be a factor
+        // Division Constraint: selection must be a factor AND result within range
         let factors = [];
         for (let i = 1; i <= currNum; i++) {
-            if (currNum % i === 0) {
+            if (currNum % i === 0 && isValidResult(currNum / i)) {
                 factors.push(i);
             }
         }
-        
-        // Pick NUM_COUNT unique factors
         randomNumbers = getUniqueRandomNumbers(factors, NUM_COUNT);
-    } else {
-        // Addition and Multiplication: numbers from 1 to 10
-        let availableNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    } else if (currOp === '+') {
+        // Addition: result within range
+        let availableNumbers = [];
+        // Try a reasonable range of numbers, e.g., 1 to 50
+        for (let i = 1; i <= 50; i++) {
+             if (isValidResult(currNum + i)) {
+                availableNumbers.push(i);
+            }
+        }
         randomNumbers = getUniqueRandomNumbers(availableNumbers, NUM_COUNT);
+    } else if (currOp === '*') {
+        // Multiplication: result within range
+        let availableNumbers = [];
+        // Try a reasonable range, e.g., 1 to 10
+        for (let i = 1; i <= 10; i++) {
+             if (isValidResult(currNum * i)) {
+                availableNumbers.push(i);
+            }
+        }
+        randomNumbers = getUniqueRandomNumbers(availableNumbers, NUM_COUNT);
+    }
+
+    // Fallback if we couldn't find enough valid numbers (should be rare with good operator selection)
+    // If we have 0 valid numbers, we might be in a stuck state, but let's just give some randoms 
+    // and hope the user can survive or the game ends naturally.
+    if (randomNumbers.length < NUM_COUNT) {
+         // Fill with standard logic if we are desperate, but this technically violates the strict rule.
+         // However, providing NO buttons is worse.
+         // Let's try to fill with "safe" numbers if possible, or just randoms.
+         let backup = [];
+         if (currOp === '+' || currOp === '*') backup = [1, 2, 3, 4, 5];
+         else if (currOp === '-') backup = [1, 2, 3]; // simplified
+         else if (currOp === '/') backup = [1]; 
+         
+         // Combine unique
+         let set = new Set([...randomNumbers, ...backup]);
+         randomNumbers = Array.from(set).slice(0, NUM_COUNT);
     }
 
     return {
@@ -194,41 +228,96 @@ function countFactors(num) {
 }
 
 // Check all possible outcomes and determine next operator
-function getNextOperatorForPossibleOutcomes(currNum, currOp, possibleChoices) {
+function getNextOperatorForPossibleOutcomes(currNum, currOp, possibleChoices, targetNum) {
     let ops = ['+', '-', '*', '/'];
     
-    // Calculate all possible resulting numbers
+    // Calculate all possible resulting numbers from the CURRENT round
     let allPossibleResults = possibleChoices.map(choice => 
         applyOperation(currNum, currOp, choice)
     );
     
-    // Check if ALL possible results support division (have at least 5 factors)
-    let allSupportDivision = allPossibleResults.every(result => 
-        countFactors(result) >= 5
-    );
+    // We need to pick an operator for the NEXT round.
+    // The next operator is valid if for AT LEAST ONE of the possible results (which will be the next currNum),
+    // there exists a valid move (number selection) that keeps us within range.
+    // However, checking "exists a valid move" is complex because we generate numbers dynamically.
+    // A simpler heuristic:
+    // 1. If result is > target + 100, avoid '+', '*'.
+    // 2. If result is < target - 100, avoid '-', '/'.
+    // 3. Division needs factors.
     
-    // If not all results support division, exclude it
-    if (!allSupportDivision) {
-        ops = ['+', '-', '*'];
+    // Let's filter `ops` based on the "average" or "worst case" of possible results?
+    // Or just pick one that is generally safe for MOST results.
+    
+    // Let's refine the "bad operator" logic requested:
+    // "should not suggest operator multiplayer if the user already have bigger that target number more thatn 100"
+    
+    // We can filter the list of candidate operators.
+    let validOps = ops.filter(nextOp => {
+        // Check if this operator is "safe" for the possible results
+        // It's safe if it doesn't force the user further away when they are already far.
+        
+        // Let's check against all possible results. If ANY result makes this operator "bad", maybe avoid it?
+        // Or if the MAJORITY are bad.
+        
+        // Let's implement the specific rule: "don't suggest * if > target + 100"
+        // And general range check.
+        
+        return allPossibleResults.every(res => isOperatorSafe(res, nextOp, targetNum));
+    });
+    
+    // If we filtered everything out (rare), revert to basic ops
+    if (validOps.length === 0) {
+        validOps = ['+', '-']; 
     }
     
+    return validOps[Math.floor(Math.random() * validOps.length)];
+}
+
+function getNewOperator(currNum, targetNum) {
+    let ops = ['+', '-', '*', '/'];
+    
+    if (currNum !== undefined && targetNum !== undefined) {
+        ops = ops.filter(op => isOperatorSafe(currNum, op, targetNum));
+    }
+    
+    // If filtered out, fallback
+    if (ops.length === 0) ops = ['+', '-'];
+
     return ops[Math.floor(Math.random() * ops.length)];
 }
 
-function getNewOperator(currNum) {
-    let ops = ['+', '-', '*', '/'];
-    
-    // Count how many factors the current number has
-    if (currNum !== undefined) {
-        let factorCount = countFactors(currNum);
-        
-        // If there are fewer than 5 factors, exclude division operator
-        if (factorCount < 5) {
-            ops = ['+', '-', '*'];
+function isOperatorSafe(current, op, target) {
+    const diff = current - target;
+    const absDiff = Math.abs(diff);
+    const MAX_DIFF = 100;
+
+    // Rule 1: Division requires factors (at least 5 factors logic from before)
+    if (op === '/') {
+        if (countFactors(current) < 5) return false;
+    }
+
+    // Rule 2: If we are already far away (> 100 diff), don't use operators that explode the value further
+    if (absDiff > MAX_DIFF) {
+        if (diff > 0) {
+            // We are too big (current > target + 100)
+            // Avoid + and *
+            if (op === '+' || op === '*') return false;
+        } else {
+            // We are too small (current < target - 100)
+            // Avoid - and / (assuming / makes it smaller for positive numbers)
+            if (op === '-' || op === '/') return false;
         }
     }
     
-    return ops[Math.floor(Math.random() * ops.length)];
+    // Rule 3: Even if within range, avoid * if it immediately shoots us out of range with MINIMUM input (1 or 2)
+    // This is a bit aggressive, but safe.
+    if (op === '*' && Math.abs(current * 2 - target) > MAX_DIFF + 50) { // +50 buffer
+         // If even multiplying by 2 sends us far, it's risky.
+         // But maybe we have '1'? 
+         // Let's just stick to the user's explicit request about "already have bigger".
+    }
+
+    return true;
 }
 
 function renderInputButtons(numbers) {
